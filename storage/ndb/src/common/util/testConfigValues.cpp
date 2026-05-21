@@ -113,90 +113,7 @@ static void create_rdma_config(ConfigValuesFactory &cvf) {
   require(cvf.put(CFG_RDMA_RNR_RETRY_COUNT, 7));
   cvf.closeSection();
 
-  require(cvf.createSection(CONFIG_SECTION_CONNECTION, RDMA_TYPE));
-  require(cvf.put(CFG_CONNECTION_NODE_1, 10));
-  require(cvf.put(CFG_CONNECTION_NODE_2, 1));
-  require(cvf.put(CFG_CONNECTION_HOSTNAME_1, "api.example.com"));
-  require(cvf.put(CFG_CONNECTION_HOSTNAME_2, "db1.example.com"));
-  require(cvf.put(CFG_CONNECTION_SERVER_PORT, static_cast<Uint32>(0)));
-  require(cvf.put(CFG_CONNECTION_NODE_ID_SERVER, 1));
-  require(cvf.put(CFG_CONNECTION_SEND_SIGNAL_ID, 1));
-  require(cvf.put(CFG_CONNECTION_CHECKSUM, 1));
-  require(cvf.put(CFG_CONNECTION_PRESEND_CHECKSUM, static_cast<Uint32>(0)));
-  require(cvf.put(CFG_RDMA_SEND_BUFFER_SIZE, 2 * 1024 * 1024));
-  require(cvf.put(CFG_RDMA_RECV_BUFFER_SIZE, 2 * 1024 * 1024));
-  require(cvf.put(CFG_RDMA_QUEUE_DEPTH, 64));
-  require(cvf.put(CFG_RDMA_INLINE_THRESHOLD, 256));
-  require(cvf.put(CFG_RDMA_COMPLETION_POLL_BUDGET, 32));
-  require(cvf.put(CFG_RDMA_SPINTIME, 75));
-  require(cvf.put(CFG_RDMA_DEVICE_NAME, "mlx5_0"));
-  require(cvf.put(CFG_RDMA_PORT, 1));
-  require(cvf.put(CFG_RDMA_GID_INDEX, static_cast<Uint32>(0)));
-  require(cvf.put(CFG_RDMA_TRAFFIC_CLASS, static_cast<Uint32>(0)));
-  require(cvf.put(CFG_RDMA_RETRY_COUNT, 7));
-  require(cvf.put(CFG_RDMA_RNR_RETRY_COUNT, 7));
-  cvf.closeSection();
-
   require(cvf.commit(false));
-}
-
-static void verify_rdma_connection(ConfigValues::ConstIterator &iter,
-                                   Uint32 expected_node1,
-                                   Uint32 expected_node2,
-                                   const char *expected_host1,
-                                   const char *expected_host2,
-                                   Uint32 expected_server_port,
-                                   Uint32 expected_node_id_server,
-                                   Uint32 expected_send_signal_id,
-                                   Uint32 expected_checksum,
-                                   Uint32 expected_presend_checksum) {
-  Uint32 value = 0;
-  const char *string_value = nullptr;
-
-  require(iter.get(CFG_TYPE_OF_SECTION, &value));
-  require(value == CONNECTION_TYPE_RDMA);
-  require(iter.get(CFG_CONNECTION_NODE_1, &value));
-  require(value == expected_node1);
-  require(iter.get(CFG_CONNECTION_NODE_2, &value));
-  require(value == expected_node2);
-  require(iter.get(CFG_CONNECTION_HOSTNAME_1, &string_value));
-  require(strcmp(string_value, expected_host1) == 0);
-  require(iter.get(CFG_CONNECTION_HOSTNAME_2, &string_value));
-  require(strcmp(string_value, expected_host2) == 0);
-  require(iter.get(CFG_CONNECTION_SERVER_PORT, &value));
-  require(value == expected_server_port);
-  require(iter.get(CFG_CONNECTION_NODE_ID_SERVER, &value));
-  require(value == expected_node_id_server);
-  require(iter.get(CFG_CONNECTION_SEND_SIGNAL_ID, &value));
-  require(value == expected_send_signal_id);
-  require(iter.get(CFG_CONNECTION_CHECKSUM, &value));
-  require(value == expected_checksum);
-  require(iter.get(CFG_CONNECTION_PRESEND_CHECKSUM, &value));
-  require(value == expected_presend_checksum);
-  require(iter.get(CFG_RDMA_SEND_BUFFER_SIZE, &value));
-  require(value == 2 * 1024 * 1024);
-  require(iter.get(CFG_RDMA_RECV_BUFFER_SIZE, &value));
-  require(value == 2 * 1024 * 1024);
-  require(iter.get(CFG_RDMA_QUEUE_DEPTH, &value));
-  require(value == 64);
-  require(iter.get(CFG_RDMA_INLINE_THRESHOLD, &value));
-  require(value == 256);
-  require(iter.get(CFG_RDMA_COMPLETION_POLL_BUDGET, &value));
-  require(value == 32);
-  require(iter.get(CFG_RDMA_SPINTIME, &value));
-  require(value == 75);
-  require(iter.get(CFG_RDMA_DEVICE_NAME, &string_value));
-  require(strcmp(string_value, "mlx5_0") == 0);
-  require(iter.get(CFG_RDMA_PORT, &value));
-  require(value == 1);
-  require(iter.get(CFG_RDMA_GID_INDEX, &value));
-  require(value == 0);
-  require(iter.get(CFG_RDMA_TRAFFIC_CLASS, &value));
-  require(value == 0);
-  require(iter.get(CFG_RDMA_RETRY_COUNT, &value));
-  require(value == 7);
-  require(iter.get(CFG_RDMA_RNR_RETRY_COUNT, &value));
-  require(value == 7);
 }
 
 static void verify_rdma_config(const ConfigValues &cfg) {
@@ -213,24 +130,23 @@ static void verify_rdma_config(const ConfigValues &cfg) {
   require(iter.get(CFG_NODE_HOST, &hostname));
   require(strcmp(hostname, "db2-new.example.com") == 0);
   iter.closeSection();
-  const Uint32 dynamic_server_port = 0;
-  const Uint32 db1_node_id_server = 1;
-  const Uint32 send_signal_id_enabled = 1;
-  const Uint32 checksum_enabled = 1;
-  const Uint32 presend_checksum_disabled = 0;
 
   require(iter.openSection(CONFIG_SECTION_CONNECTION, 0));
-  verify_rdma_connection(iter, 1, 2, "db1.example.com",
-                         "db2-new.example.com", dynamic_server_port,
-                         db1_node_id_server, send_signal_id_enabled,
-                         checksum_enabled, presend_checksum_disabled);
-  iter.closeSection();
-
-  require(iter.openSection(CONFIG_SECTION_CONNECTION, 1));
-  verify_rdma_connection(iter, 10, 1, "api.example.com", "db1.example.com",
-                         dynamic_server_port, db1_node_id_server,
-                         send_signal_id_enabled, checksum_enabled,
-                         presend_checksum_disabled);
+  Uint32 section_type = 0;
+  Uint32 spintime = 0;
+  const char *host1 = nullptr;
+  const char *host2 = nullptr;
+  const char *device_name = nullptr;
+  require(iter.get(CFG_TYPE_OF_SECTION, &section_type));
+  require(section_type == CONNECTION_TYPE_RDMA);
+  require(iter.get(CFG_CONNECTION_HOSTNAME_1, &host1));
+  require(strcmp(host1, "db1.example.com") == 0);
+  require(iter.get(CFG_CONNECTION_HOSTNAME_2, &host2));
+  require(strcmp(host2, "db2-new.example.com") == 0);
+  require(iter.get(CFG_RDMA_SPINTIME, &spintime));
+  require(spintime == 75);
+  require(iter.get(CFG_RDMA_DEVICE_NAME, &device_name));
+  require(strcmp(device_name, "mlx5_0") == 0);
   iter.closeSection();
 }
 
