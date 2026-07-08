@@ -51,7 +51,7 @@ RUN --mount=type=cache,target=/var/cache/yum,id=oracle8-yum \
     zlib-devel scl-utils \
     vim pigz hostname \
     gcc-toolset-12 maven rpcgen \
-    libcurl-devel
+    libcurl-devel rdma-core-devel
 
 # Building RonDB 24.10 requires bison at least version 3.8. Oracle linux 8 ships
 # with a version that is too old, so we have to install manually.
